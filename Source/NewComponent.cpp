@@ -63,11 +63,22 @@ NewComponent::NewComponent ()
 
     chooseButton.reset (new TextButton ("chooseButton"));
     addAndMakeVisible (chooseButton.get());
-    chooseButton->setButtonText (TRANS("Choose..."));
+    chooseButton->setButtonText (TRANS("Pick"));
     chooseButton->addListener (this);
     chooseButton->setColour (TextButton::buttonColourId, Colour (0xff540000));
 
     chooseButton->setBounds (8, 80, 80, 24);
+
+    filePrinter.reset (new Label ("filePrinter",
+                                  TRANS("No file chosen")));
+    addAndMakeVisible (filePrinter.get());
+    filePrinter->setFont (Font ("DokChampa", 15.50f, Font::plain).withTypefaceStyle ("Regular"));
+    filePrinter->setJustificationType (Justification::centredLeft);
+    filePrinter->setEditable (false, false, false);
+    filePrinter->setColour (TextEditor::textColourId, Colours::black);
+    filePrinter->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
+
+    filePrinter->setBounds (0, 48, 280, 24);
 
 
     //[UserPreSize]
@@ -77,12 +88,14 @@ NewComponent::NewComponent ()
 
 
     //[Constructor] You can add your own custom stuff here..
-	
+
 	state = STOPPED;
+	fileUploaded = false;
 	formatManager.registerBasicFormats();
 	setAudioChannels(0, 2);
 	transportSource.addChangeListener(this);
-
+	startButton->setEnabled(false);
+	stopButton->setEnabled(false);
     //[/Constructor]
 }
 
@@ -95,6 +108,7 @@ NewComponent::~NewComponent()
     stopButton = nullptr;
     label = nullptr;
     chooseButton = nullptr;
+    filePrinter = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -160,10 +174,13 @@ void NewComponent::buttonClicked (Button* buttonThatWasClicked)
 		{
 			File file = chooser.getResult();                                  // [9]
 			AudioFormatReader* reader = formatManager.createReaderFor(file);
+			fileUploaded = true;
+			filePrinter->setText(file.getFileName().substring(0,file.getFileName().length() - 4), dontSendNotification);
 			// [10]
 			if (reader != nullptr) {
 				std::unique_ptr<AudioFormatReaderSource> newSource(new AudioFormatReaderSource(reader, true)); // [11]
-				transportSource.setSource(newSource.get(),0, nullptr, reader->sampleRate);                     // [12]
+				transportSource.setSource(newSource.get(),0, nullptr, reader->sampleRate);      
+				changeState(STARTING);// [12]
 				startButton->setEnabled(true);                                                      // [13]
 				readerSource.reset(newSource.release());
 			}
@@ -180,12 +197,13 @@ void NewComponent::buttonClicked (Button* buttonThatWasClicked)
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 void NewComponent::changeState(AudioState newState)
 {
+	
 	if (state != newState)
 	{
 		state = newState;
 		switch (state)
 		{
-		case STOPPED:        
+		case STOPPED:
 			startButton->setButtonText("Start");
 			startButton->setEnabled(true);
 			stopButton->setEnabled(false);
@@ -205,7 +223,7 @@ void NewComponent::changeState(AudioState newState)
 			startButton->setButtonText("Resume");
 			break;
 		case PAUSING:
-			
+
 			transportSource.stop();
 			break;
 		case STOPPING:                          // [6]
@@ -225,6 +243,8 @@ void NewComponent::changeListenerCallback(ChangeBroadcaster* source)
 			changeState(STOPPED);
 		else if (state == PAUSING)
 			changeState(PAUSED);
+		else if (transportSource.hasStreamFinished())
+			changeState(STOPPED);
 	}
 }
 void NewComponent::prepareToPlay(int samplesPerBlockExpected, double sampleRate)
@@ -291,6 +311,12 @@ BEGIN_JUCER_METADATA
   <TEXTBUTTON name="chooseButton" id="6483c6aa29204653" memberName="chooseButton"
               virtualName="" explicitFocusOrder="0" pos="8 80 80 24" bgColOff="ff540000"
               buttonText="Choose..." connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+  <LABEL name="filePrinter" id="7c9d4da9870d2181" memberName="filePrinter"
+         virtualName="" explicitFocusOrder="0" pos="8 48 280 24" edTextCol="ff000000"
+         edBkgCol="0" labelText="No file chosen" editableSingleClick="0"
+         editableDoubleClick="0" focusDiscardsChanges="0" fontname="DokChampa"
+         fontsize="15.50000000000000000000" kerning="0.00000000000000000000"
+         bold="0" italic="0" justification="33"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA

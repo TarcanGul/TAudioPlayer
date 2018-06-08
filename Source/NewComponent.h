@@ -71,7 +71,7 @@ private:
 	AudioFormatManager formatManager;
 	std::unique_ptr<AudioFormatReaderSource> readerSource;
 	AudioTransportSource transportSource;
-
+	bool fileUploaded;
     //[/UserVariables]
 
     //==============================================================================
@@ -79,6 +79,7 @@ private:
     std::unique_ptr<TextButton> stopButton;
     std::unique_ptr<Label> label;
     std::unique_ptr<TextButton> chooseButton;
+    std::unique_ptr<Label> filePrinter;
 
 
     //==============================================================================
