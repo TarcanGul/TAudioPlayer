@@ -35,7 +35,9 @@
 */
 class NewComponent  : public AudioAppComponent,
                       public ChangeListener,
-                      public Button::Listener
+                      public Timer,
+                      public Button::Listener,
+                      public Slider::Listener
 {
 public:
     //==============================================================================
@@ -50,13 +52,15 @@ public:
 	void getNextAudioBlock(const AudioSourceChannelInfo& bufferToFill) override;
 	void releaseResources() override;
 
-	void NewComponent::changeListenerCallback(ChangeBroadcaster* source);
+	void changeListenerCallback(ChangeBroadcaster* source);
+	void timerCallback() override;
 
     //[/UserMethods]
 
     void paint (Graphics& g) override;
     void resized() override;
     void buttonClicked (Button* buttonThatWasClicked) override;
+    void sliderValueChanged (Slider* sliderThatWasMoved) override;
 
 
 
@@ -80,6 +84,7 @@ private:
     std::unique_ptr<Label> label;
     std::unique_ptr<TextButton> chooseButton;
     std::unique_ptr<Label> filePrinter;
+    std::unique_ptr<Slider> timeSlider;
 
 
     //==============================================================================

@@ -78,7 +78,18 @@ NewComponent::NewComponent ()
     filePrinter->setColour (TextEditor::textColourId, Colours::black);
     filePrinter->setColour (TextEditor::backgroundColourId, Colour (0x00000000));
 
-    filePrinter->setBounds (0, 48, 280, 24);
+    filePrinter->setBounds (8, 48, 280, 24);
+
+    timeSlider.reset (new Slider ("new slider"));
+    addAndMakeVisible (timeSlider.get());
+    timeSlider->setRange (0, 1, 0);
+    timeSlider->setSliderStyle (Slider::LinearHorizontal);
+    timeSlider->setTextBoxStyle (Slider::NoTextBox, false, 80, 20);
+    timeSlider->setColour (Slider::backgroundColourId, Colour (0xff723131));
+    timeSlider->setColour (Slider::thumbColourId, Colour (0xff540000));
+    timeSlider->addListener (this);
+
+    timeSlider->setBounds (8, 168, 280, 24);
 
 
     //[UserPreSize]
@@ -96,6 +107,7 @@ NewComponent::NewComponent ()
 	transportSource.addChangeListener(this);
 	startButton->setEnabled(false);
 	stopButton->setEnabled(false);
+	startTimer(50);
     //[/Constructor]
 }
 
@@ -109,6 +121,7 @@ NewComponent::~NewComponent()
     label = nullptr;
     chooseButton = nullptr;
     filePrinter = nullptr;
+    timeSlider = nullptr;
 
 
     //[Destructor]. You can add your own custom destruction code here..
@@ -162,6 +175,8 @@ void NewComponent::buttonClicked (Button* buttonThatWasClicked)
 			changeState(STOPPED);
 		else
 			changeState(STOPPING);
+
+		timeSlider->setValue(0.0);
         //[/UserButtonCode_stopButton]
     }
     else if (buttonThatWasClicked == chooseButton.get())
@@ -179,7 +194,7 @@ void NewComponent::buttonClicked (Button* buttonThatWasClicked)
 			// [10]
 			if (reader != nullptr) {
 				std::unique_ptr<AudioFormatReaderSource> newSource(new AudioFormatReaderSource(reader, true)); // [11]
-				transportSource.setSource(newSource.get(),0, nullptr, reader->sampleRate);      
+				transportSource.setSource(newSource.get(),0, nullptr, reader->sampleRate);
 				changeState(STARTING);// [12]
 				startButton->setEnabled(true);                                                      // [13]
 				readerSource.reset(newSource.release());
@@ -192,12 +207,28 @@ void NewComponent::buttonClicked (Button* buttonThatWasClicked)
     //[/UserbuttonClicked_Post]
 }
 
+void NewComponent::sliderValueChanged (Slider* sliderThatWasMoved)
+{
+    //[UsersliderValueChanged_Pre]
+    //[/UsersliderValueChanged_Pre]
+
+    if (sliderThatWasMoved == timeSlider.get())
+    {
+        //[UserSliderCode_timeSlider] -- add your slider handling code here..
+		transportSource.setPosition(transportSource.getLengthInSeconds()*timeSlider->getValue());
+        //[/UserSliderCode_timeSlider]
+    }
+
+    //[UsersliderValueChanged_Post]
+    //[/UsersliderValueChanged_Post]
+}
+
 
 
 //[MiscUserCode] You can add your own definitions of your custom methods or any other code here...
 void NewComponent::changeState(AudioState newState)
 {
-	
+
 	if (state != newState)
 	{
 		state = newState;
@@ -275,7 +306,13 @@ void NewComponent::releaseResources()
 	// For more details, see the help for AudioProcessor::releaseResources()
 }
 
-
+void NewComponent::timerCallback() 
+{
+	if (transportSource.isPlaying()) 
+	{	
+		timeSlider->setValue(transportSource.getCurrentPosition() / transportSource.getLengthInSeconds());
+	}
+}
 
 //[/MiscUserCode]
 
@@ -290,7 +327,7 @@ void NewComponent::releaseResources()
 BEGIN_JUCER_METADATA
 
 <JUCER_COMPONENT documentType="Component" className="NewComponent" componentName=""
-                 parentClasses="public AudioAppComponent, public ChangeListener"
+                 parentClasses="public AudioAppComponent, public ChangeListener, public Timer"
                  constructorParams="" variableInitialisers="" snapPixels="8" snapActive="1"
                  snapShown="1" overlayOpacity="0.330" fixedSize="1" initialWidth="300"
                  initialHeight="200">
@@ -310,13 +347,19 @@ BEGIN_JUCER_METADATA
          bold="0" italic="0" justification="33"/>
   <TEXTBUTTON name="chooseButton" id="6483c6aa29204653" memberName="chooseButton"
               virtualName="" explicitFocusOrder="0" pos="8 80 80 24" bgColOff="ff540000"
-              buttonText="Choose..." connectedEdges="0" needsCallback="1" radioGroupId="0"/>
+              buttonText="Pick" connectedEdges="0" needsCallback="1" radioGroupId="0"/>
   <LABEL name="filePrinter" id="7c9d4da9870d2181" memberName="filePrinter"
          virtualName="" explicitFocusOrder="0" pos="8 48 280 24" edTextCol="ff000000"
          edBkgCol="0" labelText="No file chosen" editableSingleClick="0"
          editableDoubleClick="0" focusDiscardsChanges="0" fontname="DokChampa"
          fontsize="15.50000000000000000000" kerning="0.00000000000000000000"
          bold="0" italic="0" justification="33"/>
+  <SLIDER name="new slider" id="688bb890cebdfa5b" memberName="timeSlider"
+          virtualName="" explicitFocusOrder="0" pos="8 168 280 24" bkgcol="ff723131"
+          thumbcol="ff540000" min="0.00000000000000000000" max="1.00000000000000000000"
+          int="0.00000000000000000000" style="LinearHorizontal" textBoxPos="NoTextBox"
+          textBoxEditable="1" textBoxWidth="80" textBoxHeight="20" skewFactor="1.00000000000000000000"
+          needsCallback="1"/>
 </JUCER_COMPONENT>
 
 END_JUCER_METADATA
