@@ -62,6 +62,9 @@ public:
     void buttonClicked (Button* buttonThatWasClicked) override;
     void sliderValueChanged (Slider* sliderThatWasMoved) override;
 
+    // Binary resources:
+    static const char* _6000x4000_jpeg_3f9ff68960114beb8e20d969d6c6388b_jpg;
+    static const int _6000x4000_jpeg_3f9ff68960114beb8e20d969d6c6388b_jpgSize;
 
 
 private:
@@ -85,6 +88,8 @@ private:
     std::unique_ptr<TextButton> chooseButton;
     std::unique_ptr<Label> filePrinter;
     std::unique_ptr<Slider> timeSlider;
+    Image cachedImage__6000x4000_jpeg_3f9ff68960114beb8e20d969d6c6388b_jpg_1;
+    Image cachedImage__6000x4000_jpeg_3f9ff68960114beb8e20d969d6c6388b_jpg_2;
 
 
     //==============================================================================
